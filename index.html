@@ -1,0 +1,30 @@
+<html>
+  <head></head>
+  <body>
+    <h3>Local Storage</h3>
+    <pre id="localStorage"></pre>
+    <br />
+    <h3>Console logs</h3>
+    <pre id="consolelog"></pre>
+    <script id="override_console_log">
+      (function () {
+        var old = console.log;
+        var logger = document.getElementById("consolelog");
+        console.log = function () {
+          for (arg of arguments) {
+            if (typeof arg == "string") {
+              logger.innerHTML += arg + "<br />";
+            } else {
+              logger.innerHTML += JSON.stringify(arg, undefined, 2) + "<br />";
+            }
+          }
+        };
+      })();
+    </script>
+    <script src="main.js"></script>
+    <script id="show_local_storage">
+      document.querySelector("#localStorage").textContent =
+        JSON.stringify(localStorage);
+    </script>
+  </body>
+</html>
