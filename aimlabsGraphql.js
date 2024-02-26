@@ -12,7 +12,7 @@ const aimlabsGraphql = (query, variables) => {
       res.on("data", (chunk) => chunks.push(chunk));
       res.on("end", function (chunk) {
         var body = JSON.parse(Buffer.concat(chunks).toString());
-        console.dir(body, { depth: null });
+        // console.dir(body, { depth: null });
         resolve(body);
       });
     });

@@ -23,10 +23,7 @@ f = (a) => {
 const userInfo = () => {
   return aimlabsGraphql(
     `query ($input: String) {
-      aimlabProfile (username: $input) {
-          username
-          id
-      }
+      aimlabProfile (username: $input) { username, id }
     }`,
     { input: "waf9000" }
   );
@@ -42,7 +39,7 @@ accuracy`;
  * @param {number} days Defaults to 7 for week. Can increase if you want more data.
  * @returns {{task_id: string, task_name: string, ended_at: string, score: integer, accuracy: float}[]}
  */
-const allPlaysLastWeek = (days = 7) => {
+const allPlaysLastWeek = async (days = 7) => {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const edges = [],
@@ -50,26 +47,25 @@ const allPlaysLastWeek = (days = 7) => {
     order_by = { ended_at: "desc" },
     where = { ended_at: { _gt: cutoff.toISOString() }, user_id: { _eq: userId } };
   for (let offset = 0, hasNextPage = true; hasNextPage; offset += limit) {
-    const plays = aimlabsGraphql(
+    const resp = await aimlabsGraphql(
       `query ($limit: Int, $offset: Int, $order_by: AimlabPlayOrderBy!, $where: AimlabPlayWhere!) {
         aimlab {
           plays(limit: $limit, offset: $offset, order_by: $order_by, where: $where) {
             totalCount
             pageInfo { hasNextPage }
             edges { node { 
-              task_id
-              task_name
+              task_id, task_name,
               ${basicTaskStats}
             } }
           }
         }
       }`,
       { limit, offset, order_by, where }
-    ).data.aimlab.plays;
-    hasNextPage = plays.pageInfo.hasNextPage;
-    edges.push(plays.edges);
+    );
+    hasNextPage = resp.data.aimlab.plays.pageInfo.hasNextPage;
+    edges.push(resp.data.aimlab.plays.edges);
   }
   return [].concat.apply([], edges).map(({ node }) => node);
 };
 
-console.dir(allPlaysLastWeek(), { depth: null });
+allPlaysLastWeek().then((d) => console.dir(d, { depth: null }));
