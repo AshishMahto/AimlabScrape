@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Node",
-    "target": "ES2023",
+    "target": "es2022",
     "allowImportingTsExtensions": true,
     "checkJs": true,
     "strictNullChecks": true,

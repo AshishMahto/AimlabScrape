@@ -37,7 +37,7 @@ accuracy`;
 /**
  * Return a list of all plays within the last week.
  * @param {number} days Defaults to 7 for week. Can increase if you want more data.
- * @returns {{task_id: string, task_name: string, ended_at: string, score: integer, accuracy: float}[]}
+ * @returns {Promise<{ task_id: string; task_name: string; ended_at: string; score: number; accuracy: number; }[]>}
  */
 const allPlaysLastWeek = async (days = 7) => {
   const cutoff = new Date();
