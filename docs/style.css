@@ -1,0 +1,38 @@
+html {
+  height: 100%;
+  width: 100%;
+}
+
+div.bg {
+  background-image: url(https://steamuserimages-a.akamaihd.net/ugc/2019350432667380660/C3E43074C052AF34DCEFA9C4AC8A651D63FAF97D/);
+  background-image: url(https://i.ytimg.com/vi/C_JPXMBzXj4/maxresdefault.jpg);
+  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
+  background-blend-mode: overlay;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center top;
+}
+
+#username-search-section {
+  justify-content: center;
+}
+
+#stats-section {
+  justify-content: center;
+}
+
+div.card {
+  border-radius: 2rem;
+  background-color: rgba(255, 255, 255, 0.85);
+  background-blend-mode: overlay;
+}
+
+#task-list {
+  text-transform: unset
+}
+
+.red {
+  color: red;
+  padding: 5rem;
+}

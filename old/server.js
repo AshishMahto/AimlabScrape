@@ -5,7 +5,7 @@ var aimlabsGraphql = require("./aimlabsGraphql.js");
  * helps with clearing up graphql introspection succinctly
  * @param {any[]} a
  */
-f = (a) => {
+var f = (a) => {
   function getType({ kind, name, ofType }, nonNull = "") {
     return !ofType ? name + nonNull : kind === "NON_NULL" ? getType(ofType, "!") : kind + nonNull + `[${getType(ofType)}]`;
   }
