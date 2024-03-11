@@ -28,7 +28,7 @@ div.card {
   background-blend-mode: overlay;
 }
 
-#task-list {
+div.dropdown > select.dropdown-toggle {
   text-transform: unset
 }
 

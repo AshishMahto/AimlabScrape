@@ -1,88 +1,131 @@
-let doFirstTime = (am4core, w) => {
-  am4core.addLicense("CHEESECAKE");
+let doFirstTime = (window) => {
+  window.am4core.addLicense("CHEESECAKE");
   // am4core.useTheme(w.am4themes_animated);
-  doFirstTime = () => {};
+  doFirstTime = () => false;
+  return true;
+};
+
+/** @type {Record<string, Parameters<typeof Date.prototype.toLocaleString>[1] >} */
+const dateFormat = {
+  week: {
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+  },
+  month: {
+    month: "numeric",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+  },
+  year: {
+    year: "2-digit",
+    month: "numeric",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+  },
 };
 
 /**
  *
- * @param {any} am4charts
- * @param {any} am4core
- * @param {any[]} data
- * @param {{id: string, accuracy?: string | number}} benchmark
- * @param {any} w Window
+ * @param {(Play & {color?: any})[]} data
+ * @param {typeof benchmarks[0] & {accuracy?: any}} benchmark
+ * @param {string} timeframe
+ * @param {any} window Window
  */
-var makeWeekChart = function (am4charts, am4core, data, benchmark, w) {
-  doFirstTime(am4core, w);
-  var chart = (w.chart = am4core.create("chartdiv", am4charts.XYChart));
+var makeChart = function (data, benchmark, timeframe, window) {
+  const am4charts = window.am4charts;
+  const am4core = window.am4core;
 
-  const parsedData = data[benchmark.id]
-    .map((d) => ({
-      ...d,
-      ended_at: new Date(d.ended_at).toLocaleString("en-US", {
-        weekday: "short",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    }))
-    .reverse();
-  chart.data = parsedData;
+  const add = {
+    bullets(series) {
+      const bullets = series.bullets.push(new am4charts.CircleBullet());
+      bullets.strokeWidth = 2;
+      bullets.setStateOnChildren = true;
+      bullets.states.create("hover").properties.scale = 1.5;
+      return bullets;
+    },
+    yAxis() {
+      const yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+      yAxis.renderer.line.strokeOpacity = 1;
+      yAxis.renderer.line.strokeWidth = 2;
+      yAxis.cursorTooltipEnabled = false;
+      return yAxis;
+    },
+    series(valueY, numberFormat) {
+      var series = chart.series.push(new am4charts.LineSeries());
+      series.name = valueY.charAt(0).toUpperCase() + valueY.slice(1);
+      series.dataFields.valueY = valueY;
+      series.dataFields.categoryX = "ended_at";
+      series.dataFields.dateX = "ended_at";
+      series.numberFormatter = new am4core.NumberFormatter();
+      series.numberFormatter.numberFormat = numberFormat;
+      series.tooltip.dx = -15;
+      series.tooltip.pointerOrientation = "right";
+      return series;
+    },
+  };
+
+  doFirstTime(window);
+
+  window.chart?.dispose();
+  const chart = (window.chart = am4core.create("chartdiv", am4charts.XYChart));
+
+  const orange = am4core.color("#FFC040");
+
+  const parsedData = data.reverse().map((d) => ({
+    ...d,
+    ended_at: new Date(d.ended_at).toLocaleString("en-US", dateFormat[timeframe]),
+    color: d.accuracy < (Number.parseInt(benchmark.accuracy) || 0) ? am4core.color("#FF0000") : orange,
+  }));
 
   chart.cursor = new am4charts.Cursor();
 
   var xAxis = chart.xAxes.push(new am4charts.CategoryAxis());
   xAxis.dataFields.category = "ended_at";
+  xAxis.dataFields.date = "ended_at";
   xAxis.title.text = "Time";
   xAxis.renderer.line.strokeOpacity = 1;
   xAxis.renderer.line.strokeWidth = 2;
 
-  var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+  var yAxis = add.yAxis();
   yAxis.title.text = "Score";
-  yAxis.renderer.line.strokeOpacity = 1;
-  yAxis.renderer.line.strokeWidth = 2;
-  yAxis.cursorTooltipEnabled = false;
 
-  var scoreSeries = chart.series.push(new am4charts.LineSeries());
-  scoreSeries.name = "Score";
-  scoreSeries.dataFields.valueY = "score";
-  scoreSeries.dataFields.categoryX = "ended_at";
-  scoreSeries.tooltip.dx = -15;
-  scoreSeries.tooltip.pointerOrientation = "right";
-  scoreSeries.tooltip.ignoreBounds = true;
-  scoreSeries.tooltip.tooltipText = "{valueY}";
-  scoreSeries.numberFormatter = new am4core.NumberFormatter();
-  scoreSeries.numberFormatter.numberFormat = "#";
-  var bullets = scoreSeries.bullets.push(new am4charts.CircleBullet());
-  bullets.strokeWidth = 2;
-  bullets.setStateOnChildren = true;
-  var hoverState = bullets.states.create("hover");
-  hoverState.properties.scale = 1.5;
+  var scoreSeries = add.series("score", "#");
+  scoreSeries.tooltipText = "{valueY}";
+
+  var bullets = add.bullets(scoreSeries);
 
   if (benchmark.accuracy !== "redundant") {
-    var leftAxis = chart.yAxes.push(new am4charts.ValueAxis());
-    leftAxis.renderer.opposite = true;
+    var leftAxis = add.yAxis();
     leftAxis.title.text = "Accuracy";
-    leftAxis.renderer.line.strokeOpacity = 1;
-    leftAxis.renderer.line.strokeWidth = 2;
-    leftAxis.cursorTooltipEnabled = false;
-    // leftAxis.renderer.grid.template.disabled = true;
+    leftAxis.renderer.opposite = true;
     leftAxis.syncWithAxis = yAxis;
 
-    var accSeries = chart.series.push(new am4charts.LineSeries());
-    accSeries.name = "Accuracy";
+    var accSeries = add.series("accuracy", "#.00'%'");
+    accSeries.stroke = orange;
     accSeries.setYAxis(leftAxis);
-    accSeries.dataFields.valueY = "accuracy";
-    accSeries.dataFields.categoryX = "ended_at";
-    accSeries.numberFormatter = new am4core.NumberFormatter();
-    accSeries.numberFormatter.numberFormat = "#.";
+    accSeries.tooltip.getFillFromObject = false;
+    accSeries.tooltip.background.fill = orange;
+    accSeries.tooltip.label.fill = am4core.color("#000000");
+    accSeries.tooltipText = "{name}: {valueY}";
+    scoreSeries.tooltipText = "{name}: {valueY}";
 
-    scoreSeries.dataFields.accY = "accuracy";
-    scoreSeries.tooltipText = "{name}: {valueY}\nAccuracy: {accY.formatNumber('#.')}%";
+    var bullets = add.bullets(accSeries);
+    bullets.propertyFields.fill = "color";
+    bullets.propertyFields.stroke = "color";
 
-    if (benchmark.accuracy) {
+    if (benchmark.accuracy && typeof benchmark.accuracy === "number") {
+      const range = leftAxis.axisRanges.create();
+      range.endValue = benchmark.accuracy;
+      range.value = 0;
+      range.axisFill.fill = am4core.color("#FF0000");
+      range.axisFill.fillOpacity = 0.1;
     }
   }
-
-  // w.scoreSeries.template.tooltipText = "Series: {name}\nCategory: {categoryX}\nValue: {valueY}";
+  chart.data = parsedData;
 };
